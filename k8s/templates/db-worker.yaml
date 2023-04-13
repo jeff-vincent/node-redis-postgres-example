@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-worker
+  labels:
+    app: db-worker
+spec:
+  selector:
+    matchLabels:
+      app: db-worker
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: db-worker
+    spec:
+      containers:
+        - name: db-worker
+          image: jdvincent/node-db-worker:latest
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.REDIS_HOST | quote  }}
+            - name: REDIS_PORT
+              value: {{ .Values.REDIS_PORT | quote  }}
+            - name: POSTGRES_USER
+              value: {{ .Values.POSTGRES_USER | quote  }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.POSTGRES_PASSWORD | quote  }}
+            - name: POSTGRES_HOST
+              value: {{ .Values.POSTGRES_HOST | quote  }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.POSTGRES_PORT | quote  }}
+            - name: POSTGRES_DATABASE
+              value: {{ .Values.POSTGRES_DATABASE | quote  }}
+            - name: PORT
+              value: '3000'
+          ports:
+            - name: db-worker
+              containerPort: 3000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-worker
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: db-worker
+  selector:
+    app: db-worker
+  type: ClusterIP

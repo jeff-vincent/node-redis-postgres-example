@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-service
+  labels:
+    app: db-service
+spec:
+  selector:
+    matchLabels:
+      app: db-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: db-service
+    spec:
+      containers:
+        - name: db-service
+          image: jdvincent/node-db-service:latest
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.POSTGRES_USER | quote  }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.POSTGRES_PASSWORD | quote  }}
+            - name: POSTGRES_HOST
+              value: {{ .Values.POSTGRES_HOST | quote  }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.POSTGRES_PORT | quote  }}
+            - name: POSTGRES_DATABASE
+              value: {{ .Values.POSTGRES_DATABASE | quote  }}
+            - name: PORT
+              value: '3000'
+          ports:
+            - name: db-service
+              containerPort: 3000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: db-service
+  selector:
+    app: db-service
+  type: ClusterIP

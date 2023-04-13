@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-api
+  labels:
+    app: web-api
+spec:
+  selector:
+    matchLabels:
+      app: web-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-api
+    spec:
+      containers:
+        - name: web-api
+          image: jdvincent/node-web-api:latest
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.REDIS_HOST | quote  }}
+            - name: REDIS_PORT
+              value: {{ .Values.REDIS_PORT | quote  }}
+            - name: DB_SERVICE_HOST
+              value: {{ .Values.DB_SERVICE_HOST | quote  }}
+            - name: DB_SERVICE_PORT
+              value: {{ .Values.DB_SERVICE_PORT | quote  }}
+            - name: PORT
+              value: '3000'
+          ports:
+            - name: web-api
+              containerPort: 3000
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-api
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: web-api
+  selector:
+    app: web-api
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-api
+spec:
+  ingressClassName: {{ .Values.ingressClassName | quote }}
+  rules:
+    - host: {{ .Values.ingressHost | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-api
+                port:
+                  number: 3000
